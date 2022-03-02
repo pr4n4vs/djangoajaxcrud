@@ -1,0 +1,103 @@
+<script>
+    //msg
+    var option = 
+    {
+        animation : true,
+        delay : 2000
+    };
+    
+    function Toasty(msg)
+    {
+        var toastHTMLElement = document.getElementById( 'EpicToast' );
+        
+        var toastElement = new bootstrap.Toast( toastHTMLElement, option );
+        document.getElementById("notify").innerHTML = msg;
+        toastElement.show( );
+    }
+    //insert data
+    
+    $("#btnsave").click(function(){
+        msg='<div class="toast align-items-center" id="EpicToast" role="alert" aria-live="assertive" aria-atomic="true"> <div class="d-flex"><div class="toast-body">Hello, world! This is a toast message.</div><button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button></div></div>';
+        
+        
+        //$("#msg").html(msg);
+            
+        let id=$("#stuid").val();
+        let nw=$("#nameid").val();
+        let ew=$("#emailid").val();
+        let pw=$("#passwordid").val();
+        let csr=$("input[name=csrfmiddlewaretoken]").val();
+        if(nw!='' && ew!='' && pw!=''){
+            
+            mydata={sid:id,name:nw,email:ew,password:pw,csrfmiddlewaretoken:csr};
+            $.ajax({
+                url:"{% url 'save' %}",
+                method:"POST",
+                data:mydata,
+                dataType:"json",
+                success:function(data){
+                    d=data.student_data;
+                    
+                    output=" ";
+                   if(data.status==1){
+                    console.log("Data Saved");
+                    for(i=0;i<d.length;i++){
+                        output+="<tr><td>"+ d[i].id+"</td><td>"+d[i].name+"</td><td>"+d[i].email+"</td><td>"+d[i].password+"</td><td><input type='button' class='btn btn-sm btn-warning btn-edit' data-sid="+d[i].id+" value='Edit'>   <input type='button' class='btn btn-sm btn-danger btn-del' data-sid="+d[i].id+" value='Delete'></td></tr>";
+                    }
+                    $("#tbody").html(output); 
+                    $("#stuid").val("");
+                    $("form")[0].reset();
+                    //$("#notify").val("Successfully Done!!");
+                    msg="Successfully Done!!"
+                    Toasty(msg);
+                    
+                }
+                $("#stuid").val("");
+            }
+            })
+        }
+        
+    });
+
+    //delete data
+    $("tbody").on("click",".btn-del",function(){
+        let id=$(this).attr("data-sid");
+        let csr=$("input[name=csrfmiddlewaretoken]").val();
+        
+        mydata={sid:id,csrfmiddlewaretoken:csr};
+        mythis=this;
+        $.ajax({
+            url:"{% url 'delete' %}",
+            method:"POST",
+            data:mydata,
+            success:function(data){
+                if(data.status==1){
+                     $(mythis).closest("tr").fadeOut();
+                     msg=" Deleted Successfully!!"
+                    Toasty(msg);
+                }
+            }
+        })
+    });
+
+    //edit data
+    $("tbody").on("click",".btn-edit",function(){
+        let id=$(this).attr("data-sid");
+        let csr=$("input[name=csrfmiddlewaretoken]").val();
+        
+        mydata={sid:id,csrfmiddlewaretoken:csr};
+        mythis=this;
+        $.ajax({
+            url:"{% url 'edit' %}",  
+            method:"POST",
+            data:mydata,
+            success:function(data){
+                $("#stuid").val(data.id);
+                $("#nameid").val(data.name);
+                $("#emailid").val(data.email);
+                $("#passwordid").val(data.password);
+                
+            }
+        })
+    });
+</script>
